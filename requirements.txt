@@ -5,3 +5,4 @@ pandas
 sudachipy
 sudachidict_core
 chardet
+gdown
