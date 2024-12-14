@@ -7,6 +7,11 @@ from sudachipy import tokenizer
 from sudachipy import dictionary
 import numpy as np
 import pandas as pd
+import gdown  # Google Driveからファイルをダウンロード
+
+# Google DriveのWikipediaモデルURL
+wikipedia_drive_url = "https://drive.google.com/uc?id=1yQ43hHkxvGWHcMy15-5hquVPY_pZ6MnM"
+temp_model_path = "./temp_entity_vector.model.bin"  # 一時的に保存するパス
 
 # カスタムCSSでフォントサイズを調整
 st.markdown(
@@ -40,14 +45,31 @@ st.markdown(
 @st.cache_resource
 def load_model(path):
     try:
-        # バイナリ形式で読み込む
         return KeyedVectors.load_word2vec_format(path, binary=True)
     except Exception as binary_error:
         try:
-            # テキスト形式で再試行
             return KeyedVectors.load_word2vec_format(path, binary=False)
         except Exception as text_error:
             raise ValueError(f"モデルの読み込みに失敗しました:\nバイナリ形式エラー: {binary_error}\nテキスト形式エラー: {text_error}")
+
+# Google DriveからWikipediaモデルをダウンロードしてロードする関数
+@st.cache_resource
+def load_wikipedia_model_from_drive(drive_url, temp_path):
+    try:
+        # Google Driveからモデルをダウンロード（存在しない場合のみ）
+        if not os.path.exists(temp_path):
+            st.write("Google DriveからWikipediaモデルをダウンロード中...")
+            gdown.download(drive_url, temp_path, quiet=False)
+            st.success("Wikipediaモデルをダウンロードしました！")
+
+        # モデルをロード
+        st.write("Wikipediaモデルをロード中...")
+        model = load_model(temp_path)
+        st.success("Wikipediaモデルをロードしました！")
+        return model
+    except Exception as e:
+        st.error(f"Wikipediaモデルの読み込みに失敗しました: {e}")
+        return None
 
 # ファイルの文字コードを判定して読み込む関数
 def read_file_with_encoding(file_path):
@@ -89,9 +111,7 @@ def train_model_from_texts(text_paths, model_path):
     return model.wv
 
 # 初期化
-model_paths = {
-    "Wikipediaモデル": './wikipedia/entity_vector.model.bin',
-}
+model_paths = {"Wikipediaモデル": "Google Driveから読み込み"}
 if 'custom_models' not in st.session_state:
     st.session_state['custom_models'] = {}
 
@@ -128,8 +148,8 @@ if mode == "検索":
     # 選択されたモデルをロード
     models = {}
     for model_name in selected_models:
-        if model_name in model_paths:
-            models[model_name] = load_model(model_paths[model_name])
+        if model_name == "Wikipediaモデル":
+            models[model_name] = load_wikipedia_model_from_drive(wikipedia_drive_url, temp_model_path)
         elif model_name in st.session_state['custom_models']:
             models[model_name] = st.session_state['custom_models'][model_name]
 
