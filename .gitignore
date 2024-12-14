@@ -1,0 +1,1 @@
+echo wikipedia/entity_vector.model.bin >> .gitignore
