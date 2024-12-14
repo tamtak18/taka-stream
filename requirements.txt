@@ -1,0 +1,6 @@
+streamlit
+gensim
+numpy
+pandas
+sudachipy
+sudachidict_core
