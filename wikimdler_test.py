@@ -18,7 +18,7 @@ st.markdown(
     """
     <style>
     body {
-        font-size: 16px !important;
+        font-size: 20px !important;
     }
     .stButton button {
         font-size: 16px !important;
